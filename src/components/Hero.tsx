@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { mockTextures } from '@/utils/mockData';
 
 const Hero = () => {
   return (
