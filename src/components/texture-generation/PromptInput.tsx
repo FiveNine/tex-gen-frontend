@@ -91,10 +91,6 @@ const PromptInput = ({
               multiple
             />
           </Button>
-          
-          <div className="text-xs text-muted-foreground">
-            {referenceImages.length}/3 images
-          </div>
         </div>
       </div>
     </div>

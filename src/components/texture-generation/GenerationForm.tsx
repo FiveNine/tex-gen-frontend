@@ -15,6 +15,9 @@ import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
+// Maximum number of reference images allowed
+const MAX_REFERENCE_IMAGES = 20;
+
 // Mock user subscription status - In a real app, this would come from authentication
 const userSubscriptionPlan = {
   isPro: false, // Set to true to test Pro plan features
@@ -135,27 +138,62 @@ const GenerationForm = () => {
     const newFiles: File[] = [];
     const newPreviews: string[] = [];
     
-    // Process up to 3 files
-    const maxFiles = 3 - referenceImages.length;
-    const filesToProcess = Math.min(files.length, maxFiles);
-    
-    for (let i = 0; i < filesToProcess; i++) {
-      const file = files[i];
-      if (file.type.startsWith('image/')) {
-        newFiles.push(file);
+    // Check if adding these files would exceed the limit
+    if (referenceImages.length + files.length > MAX_REFERENCE_IMAGES) {
+      toast.error(`Maximum ${MAX_REFERENCE_IMAGES} reference images allowed`, {
+        description: `You already have ${referenceImages.length} images attached.`
+      });
+      
+      // Only process files up to the limit if there's room for more
+      const remainingSlots = MAX_REFERENCE_IMAGES - referenceImages.length;
+      if (remainingSlots <= 0) {
+        // Reset the input to allow uploading again later
+        event.target.value = '';
+        return;
+      }
+      
+      // Process only the remaining slots
+      for (let i = 0; i < remainingSlots; i++) {
+        if (i >= files.length) break;
         
-        // Generate preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            newPreviews.push(e.target.result as string);
-            if (newPreviews.length === newFiles.length) {
-              setReferenceImages(prev => [...prev, ...newFiles]);
-              setReferenceImagePreviews(prev => [...prev, ...newPreviews]);
+        const file = files[i];
+        if (file.type.startsWith('image/')) {
+          newFiles.push(file);
+          
+          // Generate preview
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target?.result) {
+              newPreviews.push(e.target.result as string);
+              if (newPreviews.length === newFiles.length) {
+                setReferenceImages(prev => [...prev, ...newFiles]);
+                setReferenceImagePreviews(prev => [...prev, ...newPreviews]);
+              }
             }
-          }
-        };
-        reader.readAsDataURL(file);
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    } else {
+      // Process all files if under the limit
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.type.startsWith('image/')) {
+          newFiles.push(file);
+          
+          // Generate preview
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target?.result) {
+              newPreviews.push(e.target.result as string);
+              if (newPreviews.length === newFiles.length) {
+                setReferenceImages(prev => [...prev, ...newFiles]);
+                setReferenceImagePreviews(prev => [...prev, ...newPreviews]);
+              }
+            }
+          };
+          reader.readAsDataURL(file);
+        }
       }
     }
     
