@@ -41,8 +41,8 @@ const PromptInput = ({
       <div className="relative w-full bg-background rounded-md border border-input overflow-hidden">
         {/* Reference Images Display with ScrollArea */}
         {referenceImagePreviews.length > 0 && (
-          <ScrollArea className="max-h-[80px] w-full bg-secondary/20">
-            <div className="flex gap-2 p-2">
+          <div className="max-h-[80px] w-full bg-secondary/20 overflow-x-auto">
+            <div className="flex gap-2 p-2 min-w-max">
               {referenceImagePreviews.map((preview, index) => (
                 <div key={index} className="relative h-12 w-12 rounded-md overflow-hidden shrink-0 group">
                   <img 
@@ -60,7 +60,7 @@ const PromptInput = ({
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         )}
         
         {/* Scrollable Text Area */}

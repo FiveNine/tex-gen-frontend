@@ -22,7 +22,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           cancelButton:
             "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
           closeButton:
-            "group-[.toast]:opacity-0 group-[.toast]:group-hover:opacity-100 transition-opacity",
+            "group-[.toast]:bg-white group-[.toast]:text-black group-[.toast]:hover:bg-primary group-[.toast]:hover:text-white group-[.toast]:transition-all",
         },
       }}
       {...props}
