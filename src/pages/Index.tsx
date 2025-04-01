@@ -3,7 +3,6 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import TextureGallery from '@/components/TextureGallery';
-import GenerationForm from '@/components/GenerationForm';
 import Footer from '@/components/Footer';
 
 const Index = () => {
@@ -57,7 +56,6 @@ const Index = () => {
           </div>
         </div>
         
-        <GenerationForm />
         <TextureGallery isHomePage={true} />
       </main>
       <Footer />

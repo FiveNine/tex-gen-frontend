@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { mockTextures } from '@/utils/mockData';
+import GenerationForm from '@/components/GenerationForm';
 
 const Hero = () => {
   return (
@@ -22,13 +22,8 @@ const Hero = () => {
           Create high-quality, seamless textures for your 3D models, game assets, and design projects in seconds with our AI texture generator.
         </p>
         
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button size="lg" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
-            Start Creating
-          </Button>
-          <Button size="lg" variant="outline">
-            View Gallery
-          </Button>
+        <div className="w-full max-w-xl">
+          <GenerationForm />
         </div>
         
         <div className="mt-16 md:mt-24 w-full max-w-5xl relative">
