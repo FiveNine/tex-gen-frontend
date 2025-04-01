@@ -5,14 +5,12 @@ import { mockTextures } from '@/utils/mockData';
 
 // Import sub-components
 import PromptInput from './PromptInput';
-import ReferenceImageUpload from './ReferenceImageUpload';
 import PromptHistory from './PromptHistory';
 import GenerateButton from './GenerateButton';
 import GenerationTips from './GenerationTips';
 import TexturePreview from './TexturePreview';
 import GenerationWarning from './GenerationWarning';
 import SubscriptionBadge from './SubscriptionBadge';
-import ResolutionSelector from './ResolutionSelector';
 import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
@@ -193,8 +191,8 @@ const GenerationForm = () => {
   };
 
   return (
-    <div className="grid md:grid-cols-5 gap-8 bg-secondary/30 rounded-xl p-6 shadow-lg">
-      <div className="md:col-span-2">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 bg-secondary/30 rounded-xl p-6 shadow-lg w-full max-w-6xl">
+      <div className="lg:col-span-1">
         <div className="flex justify-between items-center mb-4">
           <SubscriptionBadge 
             userSubscriptionPlan={userSubscriptionPlan}
@@ -207,9 +205,6 @@ const GenerationForm = () => {
             prompt={prompt}
             setPrompt={setPrompt}
             modificationCount={modificationCount}
-          />
-          
-          <ReferenceImageUpload 
             referenceImages={referenceImages}
             referenceImagePreviews={referenceImagePreviews}
             handleImageUpload={handleImageUpload}
@@ -234,7 +229,7 @@ const GenerationForm = () => {
         </div>
       </div>
       
-      <div className="md:col-span-3 flex items-center justify-center">
+      <div className="lg:col-span-2 flex items-center justify-center">
         <TexturePreview 
           generatedTexture={generatedTexture}
           isGenerating={isGenerating}
@@ -248,7 +243,7 @@ const GenerationForm = () => {
         />
       </div>
 
-      <div className="md:col-span-5">
+      <div className="lg:col-span-3">
         <GenerationWarning 
           isConfirmed={isConfirmed}
           userSubscriptionPlan={userSubscriptionPlan}

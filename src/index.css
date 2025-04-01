@@ -51,6 +51,36 @@ body {
   font-feature-settings: "rlig" 1, "calt" 1;
 }
 
+/* Custom scrollbar styling */
+.scrollbar-thin::-webkit-scrollbar,
+textarea::-webkit-scrollbar,
+.scroll-area-viewport::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track,
+textarea::-webkit-scrollbar-track,
+.scroll-area-viewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb,
+textarea::-webkit-scrollbar-thumb,
+.scroll-area-viewport::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  border: transparent;
+}
+
+textarea {
+  min-height: 100px;
+  transition: min-height 0.2s ease;
+}
+
+textarea:focus {
+  min-height: 150px;
+}
+
 .glow-effect {
   text-shadow: 0 0 10px rgba(139, 92, 246, 0.5), 0 0 20px rgba(139, 92, 246, 0.3);
 }
