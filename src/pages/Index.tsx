@@ -4,7 +4,6 @@ import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import TextureGallery from '@/components/TextureGallery';
 import GenerationForm from '@/components/GenerationForm';
-import PricingSection from '@/components/PricingSection';
 import Footer from '@/components/Footer';
 
 const Index = () => {
@@ -60,7 +59,6 @@ const Index = () => {
         
         <GenerationForm />
         <TextureGallery isHomePage={true} />
-        <PricingSection />
       </main>
       <Footer />
     </div>

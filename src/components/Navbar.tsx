@@ -44,14 +44,6 @@ const Navbar = () => {
           >
             Pricing
           </Link>
-          <Link 
-            to="/docs" 
-            className={`text-sm font-medium transition-colors ${
-              location.pathname === '/docs' ? 'text-primary' : 'hover:text-primary'
-            }`}
-          >
-            Documentation
-          </Link>
         </nav>
 
         {/* Auth Buttons */}
@@ -104,15 +96,6 @@ const Navbar = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               Pricing
-            </Link>
-            <Link 
-              to="/docs" 
-              className={`text-sm font-medium transition-colors ${
-                location.pathname === '/docs' ? 'text-primary' : 'hover:text-primary'
-              }`}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Documentation
             </Link>
             <div className="flex flex-col gap-2 pt-2">
               <Button variant="ghost" size="sm">Sign In</Button>
