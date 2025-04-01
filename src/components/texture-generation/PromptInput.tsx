@@ -42,7 +42,7 @@ const PromptInput = ({
         {/* Reference Images Display with ScrollArea */}
         {referenceImagePreviews.length > 0 && (
           <ScrollArea className="max-h-[80px] w-full bg-secondary/20">
-            <div className="flex gap-2 p-2">
+            <div className="flex gap-2 p-2 overflow-x-auto whitespace-nowrap min-w-full">
               {referenceImagePreviews.map((preview, index) => (
                 <div key={index} className="relative h-12 w-12 rounded-md overflow-hidden shrink-0 group">
                   <img 
@@ -52,10 +52,10 @@ const PromptInput = ({
                   />
                   <Button 
                     size="icon" 
-                    className="absolute top-0 right-0 w-4 h-4 p-0 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-0 right-0 w-4 h-4 p-0 rounded-full bg-white hover:bg-primary hover:text-white transition-colors"
                     onClick={() => removeReferenceImage(index)}
                   >
-                    <X className="h-2 w-2 text-black" />
+                    <X className="h-2 w-2 text-black group-hover:text-white" />
                   </Button>
                 </div>
               ))}
