@@ -4,19 +4,13 @@ import { mockTextures } from '@/utils/mockData';
 import TextureCard from './TextureCard';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-interface TextureGalleryProps {
-  isHomePage?: boolean;
-}
-
-const TextureGallery = ({ isHomePage = false }: TextureGalleryProps) => {
+const TextureGallery = () => {
   const [textures, setTextures] = useState(mockTextures);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const texturesPerPage = isHomePage ? 4 : 8;
+  const texturesPerPage = 8;
 
   // Filter textures based on search query
   useEffect(() => {
@@ -32,7 +26,7 @@ const TextureGallery = ({ isHomePage = false }: TextureGalleryProps) => {
     } else {
       setTextures(mockTextures.slice(0, page * texturesPerPage));
     }
-  }, [searchQuery, page, texturesPerPage]);
+  }, [searchQuery, page]);
 
   // Load more textures when scrolling
   const loadMoreTextures = () => {
@@ -47,8 +41,6 @@ const TextureGallery = ({ isHomePage = false }: TextureGalleryProps) => {
 
   // Detect when user scrolls to bottom to load more textures
   useEffect(() => {
-    if (isHomePage) return; // Don't add scroll event for homepage
-
     const handleScroll = () => {
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
         loadMoreTextures();
@@ -57,25 +49,13 @@ const TextureGallery = ({ isHomePage = false }: TextureGalleryProps) => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isLoading, isHomePage]);
+  }, [isLoading]);
 
   return (
-    <section className={isHomePage ? "py-12 bg-background" : "py-12"}>
+    <section className="py-12">
       <div className="container">
         <div className="mb-8 flex flex-col md:flex-row md:justify-between gap-4">
-          {isHomePage ? (
-            <h2 className="text-3xl font-bold">Recent Textures</h2>
-          ) : (
-            <div>
-              <Tabs defaultValue="all" className="w-full">
-                <TabsList>
-                  <TabsTrigger value="all">All Textures</TabsTrigger>
-                  <TabsTrigger value="my">My Textures</TabsTrigger>
-                  <TabsTrigger value="popular">Popular</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-          )}
+          <h2 className="text-3xl font-bold">Texture Gallery</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
@@ -88,22 +68,10 @@ const TextureGallery = ({ isHomePage = false }: TextureGalleryProps) => {
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {textures.slice(0, isHomePage ? 4 : textures.length).map((texture) => (
+          {textures.map((texture) => (
             <TextureCard key={texture.id} texture={texture} />
           ))}
         </div>
-
-        {isHomePage && textures.length > 4 && (
-          <div className="mt-8 text-center">
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={() => window.location.href = '/gallery'}
-            >
-              View All Textures
-            </Button>
-          </div>
-        )}
 
         {isLoading && (
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
