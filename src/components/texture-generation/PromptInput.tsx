@@ -43,19 +43,18 @@ const PromptInput = ({
         {referenceImagePreviews.length > 0 && (
           <div className="flex gap-2 p-2 bg-secondary/20">
             {referenceImagePreviews.map((preview, index) => (
-              <div key={index} className="relative h-12 w-12 rounded-md overflow-hidden">
+              <div key={index} className="relative h-12 w-12 rounded-md overflow-hidden group">
                 <img 
                   src={preview} 
                   alt={`Reference ${index + 1}`} 
                   className="h-full w-full object-cover" 
                 />
                 <Button 
-                  variant="destructive" 
                   size="icon" 
-                  className="absolute top-0 right-0 w-4 h-4 p-0 rounded-full"
+                  className="absolute top-0 right-0 w-4 h-4 p-0 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={() => removeReferenceImage(index)}
                 >
-                  <X className="h-2 w-2" />
+                  <X className="h-2 w-2 text-black" />
                 </Button>
               </div>
             ))}
