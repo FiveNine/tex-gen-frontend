@@ -1,6 +1,9 @@
+
 import React, { useState } from 'react';
-import { toast } from 'sonner';
-import { mockTextures } from '@/utils/mockData';
+import { useReferenceImages } from '@/hooks/useReferenceImages';
+import { useTextureGeneration } from '@/hooks/useTextureGeneration';
+import { useSubscription } from '@/hooks/useSubscription';
+import { LoginDialog, ResolutionDialog } from './GenerationDialogs';
 
 // Import sub-components
 import PromptInput from './PromptInput';
@@ -10,195 +13,72 @@ import GenerationTips from './GenerationTips';
 import TexturePreview from './TexturePreview';
 import GenerationWarning from './GenerationWarning';
 import SubscriptionBadge from './SubscriptionBadge';
-import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
-
-// Maximum number of reference images allowed
-const MAX_REFERENCE_IMAGES = 20;
-
-// Mock user subscription status - In a real app, this would come from authentication
-const userSubscriptionPlan = {
-  isPro: false, // Set to true to test Pro plan features
-};
-
-// Mock authentication state - In a real app, this would come from authentication
-const mockIsAuthenticated = false; // Set to false to test login prompt
-
-// Maximum number of modifications allowed for free users
-const MAX_FREE_MODIFICATIONS = 3;
 
 const GenerationForm = () => {
-  const [prompt, setPrompt] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isUpscaling, setIsUpscaling] = useState(false);
-  const [generatedTexture, setGeneratedTexture] = useState<null | string>(null);
-  const [modificationCount, setModificationCount] = useState(0);
-  const [isConfirmed, setIsConfirmed] = useState(false);
-  const [currentPromptHistory, setCurrentPromptHistory] = useState<string[]>([]);
-  const [upscaleProgress, setUpscaleProgress] = useState(0);
-  const [referenceImages, setReferenceImages] = useState<File[]>([]);
-  const [referenceImagePreviews, setReferenceImagePreviews] = useState<string[]>([]);
+  const {
+    referenceImages,
+    referenceImagePreviews,
+    handleImageUpload,
+    removeReferenceImage
+  } = useReferenceImages();
+
+  const {
+    prompt,
+    setPrompt,
+    isGenerating,
+    isUpscaling,
+    generatedTexture,
+    modificationCount,
+    isConfirmed,
+    currentPromptHistory,
+    upscaleProgress,
+    selectedResolution,
+    setSelectedResolution,
+    handleGenerate,
+    handleConfirmResolution,
+    getResolutionLabel,
+    isResolutionAvailable
+  } = useTextureGeneration();
+
+  const {
+    userSubscriptionPlan,
+    isAuthenticated,
+    canModify,
+    remainingModifications,
+    MAX_FREE_MODIFICATIONS
+  } = useSubscription(modificationCount);
+
+  // Dialog states
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [showResolutionDialog, setShowResolutionDialog] = useState(false);
-  const [selectedResolution, setSelectedResolution] = useState<number>(2048);
 
-  // Check if user can modify
-  const canModify = userSubscriptionPlan.isPro || modificationCount < MAX_FREE_MODIFICATIONS;
-  
-  // Calculate remaining modifications
-  const remainingModifications = userSubscriptionPlan.isPro 
-    ? '∞' 
-    : `${MAX_FREE_MODIFICATIONS - modificationCount}/${MAX_FREE_MODIFICATIONS}`;
-
-  const handleGenerate = () => {
-    if (!prompt.trim() && referenceImages.length === 0) {
-      toast.error("Please provide a text prompt or reference image", {
-        description: "We need at least one input to generate a texture"
-      });
-      return;
-    }
-
+  const handleGenerateClick = () => {
     // Check if user is authenticated
-    if (!mockIsAuthenticated) {
+    if (!isAuthenticated) {
       setShowLoginPrompt(true);
       return;
     }
     
-    // Reset confirmation state when generating a new texture
-    setIsConfirmed(false);
-    setIsGenerating(true);
-    
-    // Add current prompt to history
-    if (prompt.trim() && !currentPromptHistory.includes(prompt)) {
-      setCurrentPromptHistory(prev => [...prev, prompt]);
-    }
-    
-    // Increment modification count if not the first generation
-    if (generatedTexture && !userSubscriptionPlan.isPro) {
-      setModificationCount(prev => prev + 1);
-    }
-    
-    // Simulate texture generation with a random one from our mock data (low resolution preview)
-    setTimeout(() => {
-      const randomIndex = Math.floor(Math.random() * mockTextures.length);
-      setGeneratedTexture(mockTextures[randomIndex].imageUrl);
-      setIsGenerating(false);
-      
-      toast.success("Texture preview generated!", {
-        description: "This is a low-resolution preview. Finalize when ready for high-resolution."
-      });
-    }, 2000);
+    handleGenerate(referenceImages);
   };
 
-  const handleUpscale = () => {
+  const handleRegenerateClick = () => {
+    if (!canModify) {
+      return;
+    }
+    handleGenerateClick();
+  };
+
+  const handleUpscaleClick = () => {
     setShowResolutionDialog(true);
   };
 
-  const handleConfirmResolution = () => {
+  const handleConfirmResolutionClick = () => {
     setShowResolutionDialog(false);
-    setIsUpscaling(true);
-    setUpscaleProgress(0);
-    
-    // Simulate upscaling process with progress updates
-    const interval = setInterval(() => {
-      setUpscaleProgress(prev => {
-        const newProgress = prev + 20;
-        if (newProgress >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setIsUpscaling(false);
-            setIsConfirmed(true);
-            toast.success(`${getResolutionLabel(selectedResolution)} texture generated!`, {
-              description: "Your texture has been added to the gallery."
-            });
-          }, 500);
-          return 100;
-        }
-        return newProgress;
-      });
-    }, 700);
+    handleConfirmResolution();
   };
 
-  const handleRegenerate = () => {
-    if (!canModify) {
-      toast.error("Modification limit reached", {
-        description: "Upgrade to Pro for unlimited modifications."
-      });
-      return;
-    }
-    handleGenerate();
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-    
-    // Check if adding these files would exceed the limit
-    if (referenceImages.length + files.length > MAX_REFERENCE_IMAGES) {
-      toast.error(`Maximum ${MAX_REFERENCE_IMAGES} reference images allowed`, {
-        description: `You already have ${referenceImages.length} images attached.`
-      });
-      
-      // Reset the input to allow uploading again later
-      event.target.value = '';
-      return;
-    }
-    
-    const newFiles: File[] = [];
-    const newPreviews: string[] = [];
-    
-    // Process all files if under the limit
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (file.type.startsWith('image/')) {
-        newFiles.push(file);
-        
-        // Generate preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            newPreviews.push(e.target.result as string);
-            if (newPreviews.length === newFiles.length) {
-              setReferenceImages(prev => [...prev, ...newFiles]);
-              setReferenceImagePreviews(prev => [...prev, ...newPreviews]);
-            }
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-    
-    // Reset the input to allow uploading the same file again
-    event.target.value = '';
-    
-    if (newFiles.length > 0) {
-      toast.success(`${newFiles.length} image${newFiles.length > 1 ? 's' : ''} added`, {
-        description: "Reference images will help guide the AI generation"
-      });
-    }
-  };
-  
-  const removeReferenceImage = (index: number) => {
-    setReferenceImages(prev => prev.filter((_, i) => i !== index));
-    setReferenceImagePreviews(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const getResolutionLabel = (res: number): string => {
-    switch (res) {
-      case 2048: return "2K";
-      case 4096: return "4K";
-      case 8192: return "8K";
-      default: return `${res}px`;
-    }
-  };
-
-  const isResolutionAvailable = (res: number): boolean => {
-    if (res === 8192) {
-      return userSubscriptionPlan.isPro;
-    }
-    return true;
-  };
+  const isButtonDisabled = !prompt.trim() && referenceImages.length === 0;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 bg-secondary/30 rounded-xl p-6 shadow-lg w-full max-w-6xl">
@@ -228,10 +108,10 @@ const GenerationForm = () => {
           
           <div className="space-y-4 mt-4">
             <GenerateButton 
-              handleGenerate={handleGenerate}
+              handleGenerate={handleGenerateClick}
               isGenerating={isGenerating}
               isUpscaling={isUpscaling}
-              isDisabled={!prompt.trim() && referenceImages.length === 0}
+              isDisabled={isButtonDisabled}
             />
           </div>
           
@@ -247,8 +127,8 @@ const GenerationForm = () => {
           upscaleProgress={upscaleProgress}
           isConfirmed={isConfirmed}
           resolution={selectedResolution}
-          handleRegenerate={handleRegenerate}
-          handleUpscale={handleUpscale}
+          handleRegenerate={handleRegenerateClick}
+          handleUpscale={handleUpscaleClick}
           canModify={canModify}
         />
       </div>
@@ -262,65 +142,22 @@ const GenerationForm = () => {
         />
       </div>
 
-      {/* Login Dialog */}
-      <AlertDialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Sign in required</AlertDialogTitle>
-            <AlertDialogDescription>
-              You need to be signed in to generate textures. Please sign in or create an account to continue.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction>Sign In</AlertDialogAction>
-            <AlertDialogAction className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
-              Create Account
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Resolution Selection Dialog */}
-      <Dialog open={showResolutionDialog} onOpenChange={setShowResolutionDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Select Texture Resolution</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-6 py-4">
-            <div className="grid grid-cols-3 gap-2">
-              {[64, 128, 256, 1024, 2048, 4096, 8192].map((res) => (
-                <Button
-                  key={res}
-                  variant={selectedResolution === res ? "default" : "outline"}
-                  onClick={() => setSelectedResolution(res)}
-                  className={`${!isResolutionAvailable(res) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={!isResolutionAvailable(res)}
-                >
-                  {getResolutionLabel(res)}
-                  {res === 8192 && !userSubscriptionPlan.isPro && 
-                    <span className="ml-1 text-xs">(Pro)</span>
-                  }
-                </Button>
-              ))}
-            </div>
-          </div>
-          <DialogFooter className="sm:justify-end">
-            <Button 
-              variant="secondary" 
-              onClick={() => setShowResolutionDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-              onClick={handleConfirmResolution}
-            >
-              Generate
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Dialogs */}
+      <LoginDialog 
+        open={showLoginPrompt} 
+        onOpenChange={setShowLoginPrompt} 
+      />
+      
+      <ResolutionDialog 
+        open={showResolutionDialog} 
+        onOpenChange={setShowResolutionDialog}
+        selectedResolution={selectedResolution}
+        setSelectedResolution={setSelectedResolution}
+        onConfirm={handleConfirmResolutionClick}
+        getResolutionLabel={getResolutionLabel}
+        isResolutionAvailable={(res) => isResolutionAvailable(res, userSubscriptionPlan.isPro)}
+        isPro={userSubscriptionPlan.isPro}
+      />
     </div>
   );
 };
