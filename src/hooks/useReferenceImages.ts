@@ -28,9 +28,25 @@ export const useReferenceImages = () => {
     const newPreviews: string[] = [];
     
     // Process all files if under the limit
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (file.type.startsWith('image/')) {
+    try {
+      Array.from(files).forEach(file => {
+        // Check if file is an image
+        if (!file.type.startsWith('image/')) {
+          toast.error("Invalid file type", {
+            description: `${file.name} is not an image file.`
+          });
+          return;
+        }
+        
+        // Check file size (max 5MB)
+        const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+        if (file.size > maxSize) {
+          toast.error("File too large", {
+            description: `${file.name} exceeds the 5MB size limit.`
+          });
+          return;
+        }
+        
         newFiles.push(file);
         
         // Generate preview
@@ -38,24 +54,37 @@ export const useReferenceImages = () => {
         reader.onload = (e) => {
           if (e.target?.result) {
             newPreviews.push(e.target.result as string);
+            
+            // Only update state when all valid files have been processed
             if (newPreviews.length === newFiles.length) {
               setReferenceImages(prev => [...prev, ...newFiles]);
               setReferenceImagePreviews(prev => [...prev, ...newPreviews]);
+              
+              if (newFiles.length > 0) {
+                toast.success(`${newFiles.length} image${newFiles.length > 1 ? 's' : ''} added`, {
+                  description: "Reference images will help guide the AI generation"
+                });
+              }
             }
           }
         };
+        
+        reader.onerror = () => {
+          toast.error("Error reading file", {
+            description: `Failed to process ${file.name}.`
+          });
+        };
+        
         reader.readAsDataURL(file);
-      }
+      });
+    } catch (error) {
+      toast.error("Error uploading images", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
     }
     
     // Reset the input to allow uploading the same file again
     event.target.value = '';
-    
-    if (newFiles.length > 0) {
-      toast.success(`${newFiles.length} image${newFiles.length > 1 ? 's' : ''} added`, {
-        description: "Reference images will help guide the AI generation"
-      });
-    }
   };
   
   const removeReferenceImage = (index: number) => {

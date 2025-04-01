@@ -42,7 +42,7 @@ const PromptInput = ({
         {/* Reference Images Display with ScrollArea */}
         {referenceImagePreviews.length > 0 && (
           <ScrollArea className="max-h-[80px] w-full bg-secondary/20">
-            <div className="flex gap-2 p-2 overflow-x-auto">
+            <div className="flex gap-2 p-2">
               {referenceImagePreviews.map((preview, index) => (
                 <div key={index} className="relative h-12 w-12 rounded-md overflow-hidden shrink-0 group">
                   <img 
