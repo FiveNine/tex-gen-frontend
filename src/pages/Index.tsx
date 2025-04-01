@@ -59,7 +59,7 @@ const Index = () => {
         </div>
         
         <GenerationForm />
-        <TextureGallery />
+        <TextureGallery isHomePage={true} />
         <PricingSection />
       </main>
       <Footer />

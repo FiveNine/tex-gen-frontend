@@ -2,10 +2,11 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Menu, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -19,16 +20,36 @@ const Navbar = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
-          <Link to="/" className="text-sm font-medium hover:text-primary transition-colors">
+          <Link 
+            to="/" 
+            className={`text-sm font-medium transition-colors ${
+              location.pathname === '/' ? 'text-primary' : 'hover:text-primary'
+            }`}
+          >
             Home
           </Link>
-          <Link to="/gallery" className="text-sm font-medium hover:text-primary transition-colors">
+          <Link 
+            to="/gallery" 
+            className={`text-sm font-medium transition-colors ${
+              location.pathname === '/gallery' ? 'text-primary' : 'hover:text-primary'
+            }`}
+          >
             Gallery
           </Link>
-          <Link to="/pricing" className="text-sm font-medium hover:text-primary transition-colors">
+          <Link 
+            to="/pricing" 
+            className={`text-sm font-medium transition-colors ${
+              location.pathname === '/pricing' ? 'text-primary' : 'hover:text-primary'
+            }`}
+          >
             Pricing
           </Link>
-          <Link to="/docs" className="text-sm font-medium hover:text-primary transition-colors">
+          <Link 
+            to="/docs" 
+            className={`text-sm font-medium transition-colors ${
+              location.pathname === '/docs' ? 'text-primary' : 'hover:text-primary'
+            }`}
+          >
             Documentation
           </Link>
         </nav>
@@ -59,28 +80,36 @@ const Navbar = () => {
           <div className="container py-4 flex flex-col gap-4">
             <Link 
               to="/" 
-              className="text-sm font-medium hover:text-primary transition-colors"
+              className={`text-sm font-medium transition-colors ${
+                location.pathname === '/' ? 'text-primary' : 'hover:text-primary'
+              }`}
               onClick={() => setMobileMenuOpen(false)}
             >
               Home
             </Link>
             <Link 
               to="/gallery" 
-              className="text-sm font-medium hover:text-primary transition-colors"
+              className={`text-sm font-medium transition-colors ${
+                location.pathname === '/gallery' ? 'text-primary' : 'hover:text-primary'
+              }`}
               onClick={() => setMobileMenuOpen(false)}
             >
               Gallery
             </Link>
             <Link 
               to="/pricing" 
-              className="text-sm font-medium hover:text-primary transition-colors"
+              className={`text-sm font-medium transition-colors ${
+                location.pathname === '/pricing' ? 'text-primary' : 'hover:text-primary'
+              }`}
               onClick={() => setMobileMenuOpen(false)}
             >
               Pricing
             </Link>
             <Link 
               to="/docs" 
-              className="text-sm font-medium hover:text-primary transition-colors"
+              className={`text-sm font-medium transition-colors ${
+                location.pathname === '/docs' ? 'text-primary' : 'hover:text-primary'
+              }`}
               onClick={() => setMobileMenuOpen(false)}
             >
               Documentation
