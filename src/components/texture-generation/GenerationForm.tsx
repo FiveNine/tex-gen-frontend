@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { mockTextures } from '@/utils/mockData';
@@ -135,65 +134,38 @@ const GenerationForm = () => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
     
-    const newFiles: File[] = [];
-    const newPreviews: string[] = [];
-    
     // Check if adding these files would exceed the limit
     if (referenceImages.length + files.length > MAX_REFERENCE_IMAGES) {
       toast.error(`Maximum ${MAX_REFERENCE_IMAGES} reference images allowed`, {
         description: `You already have ${referenceImages.length} images attached.`
       });
       
-      // Only process files up to the limit if there's room for more
-      const remainingSlots = MAX_REFERENCE_IMAGES - referenceImages.length;
-      if (remainingSlots <= 0) {
-        // Reset the input to allow uploading again later
-        event.target.value = '';
-        return;
-      }
-      
-      // Process only the remaining slots
-      for (let i = 0; i < remainingSlots; i++) {
-        if (i >= files.length) break;
+      // Reset the input to allow uploading again later
+      event.target.value = '';
+      return;
+    }
+    
+    const newFiles: File[] = [];
+    const newPreviews: string[] = [];
+    
+    // Process all files if under the limit
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.type.startsWith('image/')) {
+        newFiles.push(file);
         
-        const file = files[i];
-        if (file.type.startsWith('image/')) {
-          newFiles.push(file);
-          
-          // Generate preview
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            if (e.target?.result) {
-              newPreviews.push(e.target.result as string);
-              if (newPreviews.length === newFiles.length) {
-                setReferenceImages(prev => [...prev, ...newFiles]);
-                setReferenceImagePreviews(prev => [...prev, ...newPreviews]);
-              }
+        // Generate preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            newPreviews.push(e.target.result as string);
+            if (newPreviews.length === newFiles.length) {
+              setReferenceImages(prev => [...prev, ...newFiles]);
+              setReferenceImagePreviews(prev => [...prev, ...newPreviews]);
             }
-          };
-          reader.readAsDataURL(file);
-        }
-      }
-    } else {
-      // Process all files if under the limit
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (file.type.startsWith('image/')) {
-          newFiles.push(file);
-          
-          // Generate preview
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            if (e.target?.result) {
-              newPreviews.push(e.target.result as string);
-              if (newPreviews.length === newFiles.length) {
-                setReferenceImages(prev => [...prev, ...newFiles]);
-                setReferenceImagePreviews(prev => [...prev, ...newPreviews]);
-              }
-            }
-          };
-          reader.readAsDataURL(file);
-        }
+          }
+        };
+        reader.readAsDataURL(file);
       }
     }
     

@@ -39,26 +39,28 @@ const PromptInput = ({
   return (
     <div className="space-y-2 w-full">
       <div className="relative w-full bg-background rounded-md border border-input overflow-hidden">
-        {/* Reference Images Display */}
+        {/* Reference Images Display with ScrollArea */}
         {referenceImagePreviews.length > 0 && (
-          <div className="flex gap-2 p-2 bg-secondary/20">
-            {referenceImagePreviews.map((preview, index) => (
-              <div key={index} className="relative h-12 w-12 rounded-md overflow-hidden group">
-                <img 
-                  src={preview} 
-                  alt={`Reference ${index + 1}`} 
-                  className="h-full w-full object-cover" 
-                />
-                <Button 
-                  size="icon" 
-                  className="absolute top-0 right-0 w-4 h-4 p-0 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => removeReferenceImage(index)}
-                >
-                  <X className="h-2 w-2 text-black" />
-                </Button>
-              </div>
-            ))}
-          </div>
+          <ScrollArea className="max-h-[80px] w-full bg-secondary/20">
+            <div className="flex gap-2 p-2 overflow-x-auto">
+              {referenceImagePreviews.map((preview, index) => (
+                <div key={index} className="relative h-12 w-12 rounded-md overflow-hidden shrink-0 group">
+                  <img 
+                    src={preview} 
+                    alt={`Reference ${index + 1}`} 
+                    className="h-full w-full object-cover" 
+                  />
+                  <Button 
+                    size="icon" 
+                    className="absolute top-0 right-0 w-4 h-4 p-0 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => removeReferenceImage(index)}
+                  >
+                    <X className="h-2 w-2 text-black" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
         )}
         
         {/* Scrollable Text Area */}
