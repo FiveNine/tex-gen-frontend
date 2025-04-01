@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { mockTextures } from '@/utils/mockData';
 import GenerationForm from '@/components/GenerationForm';
 
 const Hero = () => {
@@ -24,29 +23,6 @@ const Hero = () => {
         
         <div className="w-full max-w-xl">
           <GenerationForm />
-        </div>
-        
-        <div className="mt-16 md:mt-24 w-full max-w-5xl relative">
-          {/* Featured textures showcase */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4">
-            {mockTextures.slice(0, 5).map((texture, index) => (
-              <div 
-                key={texture.id} 
-                className={`rounded-lg overflow-hidden aspect-square ${
-                  index === 0 ? 'sm:col-span-2 sm:row-span-2' : ''
-                }`}
-              >
-                <img 
-                  src={texture.imageUrl} 
-                  alt={texture.title} 
-                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" 
-                />
-              </div>
-            ))}
-          </div>
-          
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background pointer-events-none"></div>
         </div>
       </div>
     </div>

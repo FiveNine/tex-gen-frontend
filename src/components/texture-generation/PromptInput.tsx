@@ -1,8 +1,6 @@
 
 import React from 'react';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Sparkles } from 'lucide-react';
 
 interface PromptInputProps {
   prompt: string;
@@ -20,9 +18,6 @@ const PromptInput = ({ prompt, setPrompt, modificationCount }: PromptInputProps)
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="prompt" className="flex items-center">
-        <Sparkles className="mr-2 h-4 w-4" /> Describe your texture
-      </Label>
       <Textarea
         id="prompt"
         placeholder={getPromptInputPlaceholder()}

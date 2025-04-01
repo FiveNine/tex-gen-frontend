@@ -158,85 +158,73 @@ const GenerationForm = () => {
   };
 
   return (
-    <section className="py-16">
-      <div className="container max-w-6xl">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Generate Your Texture</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Describe the texture you need and optionally upload reference images to help the AI understand what you're looking for.
-          </p>
+    <div className="grid md:grid-cols-2 gap-8 bg-secondary/30 rounded-xl p-6 shadow-lg">
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <SubscriptionBadge 
+            userSubscriptionPlan={userSubscriptionPlan}
+            remainingModifications={remainingModifications}
+          />
         </div>
         
-        <div className="grid md:grid-cols-2 gap-8">
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-lg font-medium">Input</h3>
-              <SubscriptionBadge 
-                userSubscriptionPlan={userSubscriptionPlan}
-                remainingModifications={remainingModifications}
-              />
-            </div>
-            
-            <div className="space-y-4">
-              <PromptInput 
-                prompt={prompt}
-                setPrompt={setPrompt}
-                modificationCount={modificationCount}
-              />
-              
-              <ReferenceImageUpload 
-                referenceImages={referenceImages}
-                referenceImagePreviews={referenceImagePreviews}
-                handleImageUpload={handleImageUpload}
-                removeReferenceImage={removeReferenceImage}
-              />
-              
-              <PromptHistory 
-                currentPromptHistory={currentPromptHistory} 
-                setPrompt={setPrompt} 
-              />
-              
-              <div className="space-y-4 mt-4">
-                <ResolutionSelector 
-                  resolution={resolution}
-                  setResolution={setResolution}
-                />
-                
-                <GenerateButton 
-                  handleGenerate={handleGenerate}
-                  isGenerating={isGenerating}
-                  isUpscaling={isUpscaling}
-                  isDisabled={!prompt.trim() && referenceImages.length === 0}
-                />
-              </div>
-              
-              <GenerationTips />
-            </div>
-          </div>
+        <div className="space-y-4">
+          <PromptInput 
+            prompt={prompt}
+            setPrompt={setPrompt}
+            modificationCount={modificationCount}
+          />
           
-          <div className="flex items-center justify-center">
-            <TexturePreview 
-              generatedTexture={generatedTexture}
+          <ReferenceImageUpload 
+            referenceImages={referenceImages}
+            referenceImagePreviews={referenceImagePreviews}
+            handleImageUpload={handleImageUpload}
+            removeReferenceImage={removeReferenceImage}
+          />
+          
+          <PromptHistory 
+            currentPromptHistory={currentPromptHistory} 
+            setPrompt={setPrompt} 
+          />
+          
+          <div className="space-y-4 mt-4">
+            <ResolutionSelector 
+              resolution={resolution}
+              setResolution={setResolution}
+            />
+            
+            <GenerateButton 
+              handleGenerate={handleGenerate}
               isGenerating={isGenerating}
               isUpscaling={isUpscaling}
-              upscaleProgress={upscaleProgress}
-              isConfirmed={isConfirmed}
-              resolution={resolution}
-              handleRegenerate={handleRegenerate}
-              handleUpscale={handleUpscale}
-              canModify={canModify}
+              isDisabled={!prompt.trim() && referenceImages.length === 0}
             />
           </div>
+          
+          <GenerationTips />
         </div>
-
-        <GenerationWarning 
+      </div>
+      
+      <div className="flex items-center justify-center">
+        <TexturePreview 
+          generatedTexture={generatedTexture}
+          isGenerating={isGenerating}
+          isUpscaling={isUpscaling}
+          upscaleProgress={upscaleProgress}
           isConfirmed={isConfirmed}
-          userSubscriptionPlan={userSubscriptionPlan}
-          modificationCount={modificationCount}
-          maxFreeModifications={MAX_FREE_MODIFICATIONS}
+          resolution={resolution}
+          handleRegenerate={handleRegenerate}
+          handleUpscale={handleUpscale}
+          canModify={canModify}
         />
       </div>
-    </section>
+
+      <GenerationWarning 
+        isConfirmed={isConfirmed}
+        userSubscriptionPlan={userSubscriptionPlan}
+        modificationCount={modificationCount}
+        maxFreeModifications={MAX_FREE_MODIFICATIONS}
+      />
+    </div>
   );
 };
 
