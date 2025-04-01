@@ -11,16 +11,19 @@ interface TexturePreviewProps {
   isUpscaling: boolean;
   upscaleProgress: number;
   isConfirmed: boolean;
-  resolution: number[];
+  resolution: number;
   handleRegenerate: () => void;
   handleUpscale: () => void;
   canModify: boolean;
 }
 
-const resolutionMap = {
-  1: '1K',
-  2: '2K',
-  3: '4K'
+const getResolutionLabel = (res: number): string => {
+  switch (res) {
+    case 2048: return "2K";
+    case 4096: return "4K";
+    case 8192: return "8K";
+    default: return `${res}px`;
+  }
 };
 
 const TexturePreview = ({
@@ -68,7 +71,7 @@ const TexturePreview = ({
         />
         <div className="absolute top-4 left-4">
           <Badge variant="outline" className="bg-black/40 backdrop-blur-sm">
-            {isConfirmed ? resolutionMap[resolution[0] as 1 | 2 | 3] : 'Preview'}
+            {isConfirmed ? getResolutionLabel(resolution) : 'Preview'}
           </Badge>
         </div>
         <div className="absolute bottom-4 right-4 flex gap-2">

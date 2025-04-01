@@ -17,14 +17,14 @@ const PromptInput = ({ prompt, setPrompt, modificationCount }: PromptInputProps)
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 w-full">
       <Textarea
         id="prompt"
         placeholder={getPromptInputPlaceholder()}
         rows={4}
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        className="resize-none"
+        className="resize-none w-full"
       />
     </div>
   );

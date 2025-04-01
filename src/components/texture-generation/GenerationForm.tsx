@@ -7,17 +7,23 @@ import { mockTextures } from '@/utils/mockData';
 import PromptInput from './PromptInput';
 import ReferenceImageUpload from './ReferenceImageUpload';
 import PromptHistory from './PromptHistory';
-import ResolutionSelector from './ResolutionSelector';
 import GenerateButton from './GenerateButton';
 import GenerationTips from './GenerationTips';
 import TexturePreview from './TexturePreview';
 import GenerationWarning from './GenerationWarning';
 import SubscriptionBadge from './SubscriptionBadge';
+import ResolutionSelector from './ResolutionSelector';
+import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
 // Mock user subscription status - In a real app, this would come from authentication
 const userSubscriptionPlan = {
   isPro: false, // Set to true to test Pro plan features
 };
+
+// Mock authentication state - In a real app, this would come from authentication
+const mockIsAuthenticated = false; // Set to false to test login prompt
 
 // Maximum number of modifications allowed for free users
 const MAX_FREE_MODIFICATIONS = 3;
@@ -26,7 +32,6 @@ const GenerationForm = () => {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUpscaling, setIsUpscaling] = useState(false);
-  const [resolution, setResolution] = useState([2]); // 1=1K, 2=2K, 3=4K
   const [generatedTexture, setGeneratedTexture] = useState<null | string>(null);
   const [modificationCount, setModificationCount] = useState(0);
   const [isConfirmed, setIsConfirmed] = useState(false);
@@ -34,6 +39,9 @@ const GenerationForm = () => {
   const [upscaleProgress, setUpscaleProgress] = useState(0);
   const [referenceImages, setReferenceImages] = useState<File[]>([]);
   const [referenceImagePreviews, setReferenceImagePreviews] = useState<string[]>([]);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showResolutionDialog, setShowResolutionDialog] = useState(false);
+  const [selectedResolution, setSelectedResolution] = useState<number>(2048);
 
   // Check if user can modify
   const canModify = userSubscriptionPlan.isPro || modificationCount < MAX_FREE_MODIFICATIONS;
@@ -48,6 +56,12 @@ const GenerationForm = () => {
       toast.error("Please provide a text prompt or reference image", {
         description: "We need at least one input to generate a texture"
       });
+      return;
+    }
+
+    // Check if user is authenticated
+    if (!mockIsAuthenticated) {
+      setShowLoginPrompt(true);
       return;
     }
     
@@ -78,6 +92,11 @@ const GenerationForm = () => {
   };
 
   const handleUpscale = () => {
+    setShowResolutionDialog(true);
+  };
+
+  const handleConfirmResolution = () => {
+    setShowResolutionDialog(false);
     setIsUpscaling(true);
     setUpscaleProgress(0);
     
@@ -90,7 +109,7 @@ const GenerationForm = () => {
           setTimeout(() => {
             setIsUpscaling(false);
             setIsConfirmed(true);
-            toast.success("High-resolution texture generated!", {
+            toast.success(`${getResolutionLabel(selectedResolution)} texture generated!`, {
               description: "Your texture has been added to the gallery."
             });
           }, 500);
@@ -157,9 +176,25 @@ const GenerationForm = () => {
     setReferenceImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
+  const getResolutionLabel = (res: number): string => {
+    switch (res) {
+      case 2048: return "2K";
+      case 4096: return "4K";
+      case 8192: return "8K";
+      default: return `${res}px`;
+    }
+  };
+
+  const isResolutionAvailable = (res: number): boolean => {
+    if (res === 8192) {
+      return userSubscriptionPlan.isPro;
+    }
+    return true;
+  };
+
   return (
-    <div className="grid md:grid-cols-2 gap-8 bg-secondary/30 rounded-xl p-6 shadow-lg">
-      <div>
+    <div className="grid md:grid-cols-5 gap-8 bg-secondary/30 rounded-xl p-6 shadow-lg">
+      <div className="md:col-span-2">
         <div className="flex justify-between items-center mb-4">
           <SubscriptionBadge 
             userSubscriptionPlan={userSubscriptionPlan}
@@ -187,11 +222,6 @@ const GenerationForm = () => {
           />
           
           <div className="space-y-4 mt-4">
-            <ResolutionSelector 
-              resolution={resolution}
-              setResolution={setResolution}
-            />
-            
             <GenerateButton 
               handleGenerate={handleGenerate}
               isGenerating={isGenerating}
@@ -204,26 +234,88 @@ const GenerationForm = () => {
         </div>
       </div>
       
-      <div className="flex items-center justify-center">
+      <div className="md:col-span-3 flex items-center justify-center">
         <TexturePreview 
           generatedTexture={generatedTexture}
           isGenerating={isGenerating}
           isUpscaling={isUpscaling}
           upscaleProgress={upscaleProgress}
           isConfirmed={isConfirmed}
-          resolution={resolution}
+          resolution={selectedResolution}
           handleRegenerate={handleRegenerate}
           handleUpscale={handleUpscale}
           canModify={canModify}
         />
       </div>
 
-      <GenerationWarning 
-        isConfirmed={isConfirmed}
-        userSubscriptionPlan={userSubscriptionPlan}
-        modificationCount={modificationCount}
-        maxFreeModifications={MAX_FREE_MODIFICATIONS}
-      />
+      <div className="md:col-span-5">
+        <GenerationWarning 
+          isConfirmed={isConfirmed}
+          userSubscriptionPlan={userSubscriptionPlan}
+          modificationCount={modificationCount}
+          maxFreeModifications={MAX_FREE_MODIFICATIONS}
+        />
+      </div>
+
+      {/* Login Dialog */}
+      <AlertDialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign in required</AlertDialogTitle>
+            <AlertDialogDescription>
+              You need to be signed in to generate textures. Please sign in or create an account to continue.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction>Sign In</AlertDialogAction>
+            <AlertDialogAction className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
+              Create Account
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Resolution Selection Dialog */}
+      <Dialog open={showResolutionDialog} onOpenChange={setShowResolutionDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Texture Resolution</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="grid grid-cols-3 gap-2">
+              {[64, 128, 256, 1024, 2048, 4096, 8192].map((res) => (
+                <Button
+                  key={res}
+                  variant={selectedResolution === res ? "default" : "outline"}
+                  onClick={() => setSelectedResolution(res)}
+                  className={`${!isResolutionAvailable(res) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={!isResolutionAvailable(res)}
+                >
+                  {getResolutionLabel(res)}
+                  {res === 8192 && !userSubscriptionPlan.isPro && 
+                    <span className="ml-1 text-xs">(Pro)</span>
+                  }
+                </Button>
+              ))}
+            </div>
+          </div>
+          <DialogFooter className="sm:justify-end">
+            <Button 
+              variant="secondary" 
+              onClick={() => setShowResolutionDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+              onClick={handleConfirmResolution}
+            >
+              Generate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
