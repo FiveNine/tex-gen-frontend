@@ -54,19 +54,23 @@ body {
 /* Custom scrollbar styling */
 .scrollbar-thin::-webkit-scrollbar,
 textarea::-webkit-scrollbar,
-.scroll-area-viewport::-webkit-scrollbar {
+.scroll-area-viewport::-webkit-scrollbar,
+.image-container::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track,
 textarea::-webkit-scrollbar-track,
-.scroll-area-viewport::-webkit-scrollbar-track {
+.scroll-area-viewport::-webkit-scrollbar-track,
+.image-container::-webkit-scrollbar-track {
   background: transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb,
 textarea::-webkit-scrollbar-thumb,
-.scroll-area-viewport::-webkit-scrollbar-thumb {
+.scroll-area-viewport::-webkit-scrollbar-thumb,
+.image-container::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.2);
   border-radius: 20px;
   border: transparent;

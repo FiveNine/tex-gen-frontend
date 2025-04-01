@@ -81,8 +81,8 @@ const GenerationForm = () => {
   const isButtonDisabled = !prompt.trim() && referenceImages.length === 0;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 bg-secondary/30 rounded-xl p-6 shadow-lg w-full max-w-6xl">
-      <div className="lg:col-span-1">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-secondary/30 rounded-xl p-6 shadow-lg w-full max-w-6xl">
+      <div className="lg:col-span-5">
         <div className="flex justify-between items-center mb-4">
           <SubscriptionBadge 
             userSubscriptionPlan={userSubscriptionPlan}
@@ -119,7 +119,7 @@ const GenerationForm = () => {
         </div>
       </div>
       
-      <div className="lg:col-span-2 flex items-center justify-center">
+      <div className="lg:col-span-7 flex items-center justify-center">
         <TexturePreview 
           generatedTexture={generatedTexture}
           isGenerating={isGenerating}
@@ -133,7 +133,7 @@ const GenerationForm = () => {
         />
       </div>
 
-      <div className="lg:col-span-3">
+      <div className="lg:col-span-12">
         <GenerationWarning 
           isConfirmed={isConfirmed}
           userSubscriptionPlan={userSubscriptionPlan}
