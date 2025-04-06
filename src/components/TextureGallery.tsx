@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface TextureGalleryProps {
   isHomePage?: boolean;
@@ -17,6 +18,9 @@ const TextureGallery = ({ isHomePage = false }: TextureGalleryProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const texturesPerPage = isHomePage ? 4 : 8;
+  
+  // Get authentication state from subscription hook
+  const { isAuthenticated } = useSubscription(0);
 
   // Filter textures based on search query
   useEffect(() => {
@@ -89,7 +93,11 @@ const TextureGallery = ({ isHomePage = false }: TextureGalleryProps) => {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {textures.slice(0, isHomePage ? 4 : textures.length).map((texture) => (
-            <TextureCard key={texture.id} texture={texture} />
+            <TextureCard 
+              key={texture.id} 
+              texture={texture} 
+              isAuthenticated={isAuthenticated} 
+            />
           ))}
         </div>
 

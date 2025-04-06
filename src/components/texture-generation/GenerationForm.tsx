@@ -11,6 +11,7 @@ import PromptHistory from './PromptHistory';
 import GenerateButton from './GenerateButton';
 import GenerationTips from './GenerationTips';
 import TexturePreview from './TexturePreview';
+import TextureVariations from './TextureVariations';
 import GenerationWarning from './GenerationWarning';
 import SubscriptionBadge from './SubscriptionBadge';
 
@@ -34,8 +35,14 @@ const GenerationForm = () => {
     upscaleProgress,
     selectedResolution,
     setSelectedResolution,
+    variations,
+    selectedVariationIndex,
     handleGenerate,
+    handleModify,
+    handleUpscale,
     handleConfirmResolution,
+    handleSelectVariation,
+    handleDownloadTexture,
     getResolutionLabel,
     isResolutionAvailable
   } = useTextureGeneration();
@@ -62,11 +69,11 @@ const GenerationForm = () => {
     handleGenerate(referenceImages);
   };
 
-  const handleRegenerateClick = () => {
+  const handleModifyClick = () => {
     if (!canModify) {
       return;
     }
-    handleGenerateClick();
+    handleModify();
   };
 
   const handleUpscaleClick = () => {
@@ -78,7 +85,18 @@ const GenerationForm = () => {
     handleConfirmResolution();
   };
 
+  const handleDownloadClick = (jobId: string) => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    
+    handleDownloadTexture(jobId);
+  };
+
   const isButtonDisabled = !prompt.trim() && referenceImages.length === 0;
+  const hasVariations = variations.length > 0;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-secondary/30 rounded-xl p-6 shadow-lg w-full max-w-6xl">
@@ -107,19 +125,39 @@ const GenerationForm = () => {
           />
           
           <div className="space-y-4 mt-4">
-            <GenerateButton 
-              handleGenerate={handleGenerateClick}
-              isGenerating={isGenerating}
-              isUpscaling={isUpscaling}
-              isDisabled={isButtonDisabled}
-            />
+            {!hasVariations || isConfirmed ? (
+              <GenerateButton 
+                handleGenerate={handleGenerateClick}
+                isGenerating={isGenerating}
+                isUpscaling={isUpscaling}
+                isDisabled={isButtonDisabled}
+              />
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <GenerateButton 
+                  handleGenerate={handleModifyClick}
+                  isGenerating={isGenerating}
+                  isUpscaling={isUpscaling}
+                  isDisabled={isButtonDisabled}
+                  label="Modify"
+                />
+                <GenerateButton 
+                  handleGenerate={handleUpscaleClick}
+                  isGenerating={isGenerating}
+                  isUpscaling={isUpscaling}
+                  isDisabled={false}
+                  label="Finalize"
+                  variant="primary"
+                />
+              </div>
+            )}
           </div>
           
           <GenerationTips />
         </div>
       </div>
       
-      <div className="lg:col-span-7 flex items-center justify-center">
+      <div className="lg:col-span-7 flex flex-col gap-4 items-center justify-center">
         <TexturePreview 
           generatedTexture={generatedTexture}
           isGenerating={isGenerating}
@@ -127,10 +165,21 @@ const GenerationForm = () => {
           upscaleProgress={upscaleProgress}
           isConfirmed={isConfirmed}
           resolution={selectedResolution}
-          handleRegenerate={handleRegenerateClick}
+          handleRegenerate={handleModifyClick}
           handleUpscale={handleUpscaleClick}
+          handleDownload={handleDownloadClick}
           canModify={canModify}
+          isAuthenticated={isAuthenticated}
+          variations={variations}
         />
+        
+        {variations.length > 0 && !isConfirmed && !isGenerating && !isUpscaling && (
+          <TextureVariations 
+            variations={variations}
+            selectedIndex={selectedVariationIndex}
+            onSelectVariation={handleSelectVariation}
+          />
+        )}
       </div>
 
       <div className="lg:col-span-12">

@@ -1,21 +1,58 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Download } from 'lucide-react';
+import { Download, Lock } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Texture } from '@/utils/mockData';
+import { textureApi } from '@/api/textureApi';
+import { toast } from 'sonner';
+import { LoginDialog } from '@/components/texture-generation/GenerationDialogs';
 
 interface TextureCardProps {
   texture: Texture;
+  isAuthenticated?: boolean;
 }
 
-const TextureCard = ({ texture }: TextureCardProps) => {
+const TextureCard = ({ texture, isAuthenticated = true }: TextureCardProps) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  
   const formattedDate = new Date(texture.createdAt).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   });
+
+  const handleDownload = async () => {
+    if (!isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    
+    setIsDownloading(true);
+    try {
+      // Mock job ID based on texture ID
+      const mockJobId = `job-${texture.id}`;
+      await textureApi.downloadTexture(mockJobId);
+      
+      // Create temporary link to download the image
+      const link = document.createElement('a');
+      link.href = texture.imageUrl;
+      link.download = `texture-${texture.id}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success("Texture downloaded successfully");
+    } catch (error) {
+      toast.error("Failed to download texture", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <Card className="texture-card overflow-hidden bg-secondary h-full flex flex-col">
@@ -27,7 +64,7 @@ const TextureCard = ({ texture }: TextureCardProps) => {
         />
         <div className="absolute top-2 right-2 flex items-center gap-1">
           <Badge variant="secondary" className="bg-black/60 text-white backdrop-blur-sm border-none">
-            {texture.resolution}
+            256x256
           </Badge>
         </div>
       </div>
@@ -55,16 +92,26 @@ const TextureCard = ({ texture }: TextureCardProps) => {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="p-1.5 rounded-full hover:bg-primary/20 transition-colors">
-                <Download size={16} />
+              <button 
+                className="p-1.5 rounded-full hover:bg-primary/20 transition-colors disabled:opacity-50"
+                onClick={handleDownload}
+                disabled={isDownloading}
+              >
+                {isAuthenticated ? (
+                  <Download size={16} className={isDownloading ? "animate-pulse" : ""} />
+                ) : (
+                  <Lock size={16} />
+                )}
               </button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Download texture</p>
+              <p>{isAuthenticated ? "Download 1024x1024 texture" : "Sign in to download"}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </CardFooter>
+      
+      <LoginDialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt} />
     </Card>
   );
 };
