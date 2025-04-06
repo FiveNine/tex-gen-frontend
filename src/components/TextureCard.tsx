@@ -32,13 +32,13 @@ const TextureCard = ({ texture, isAuthenticated = true }: TextureCardProps) => {
     
     setIsDownloading(true);
     try {
-      // Mock job ID based on texture ID
+      // In a real implementation, this would use the actual jobId
       const mockJobId = `job-${texture.id}`;
-      await textureApi.downloadTexture(mockJobId);
+      const downloadUrl = await textureApi.downloadTexture(mockJobId);
       
       // Create temporary link to download the image
       const link = document.createElement('a');
-      link.href = texture.imageUrl;
+      link.href = downloadUrl;
       link.download = `texture-${texture.id}.png`;
       document.body.appendChild(link);
       link.click();

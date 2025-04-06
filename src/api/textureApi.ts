@@ -1,7 +1,5 @@
 
-import { toast } from "sonner";
-
-// Mock API base URL
+// API base URL - this will be replaced with the production URL later
 const API_BASE_URL = "http://localhost:8000";
 
 // Types based on the API documentation
@@ -25,59 +23,37 @@ export interface JobResult {
   resolution: string;
 }
 
-// Mock job data storage (this would be replaced with actual API calls)
-const mockJobs: Record<string, GenerationJob> = {};
-const mockResults: Record<string, JobResult> = {};
-
-// Helper to generate random job IDs
-const generateJobId = () => `job-${Math.random().toString(36).substring(2, 10)}`;
-
-// Mock API delay to simulate network requests
-const mockDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Create 4 variations from the mockTextures array
-const generateVariations = () => {
-  const { mockTextures } = require('@/utils/mockData');
-  const shuffled = [...mockTextures].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, 4).map(texture => texture.imageUrl);
-};
-
 export const textureApi = {
   // Generate initial texture variations
   generateTexture: async (prompt: string, referenceImages?: File[]): Promise<GenerationJob> => {
     try {
-      await mockDelay(2000); // Simulate API delay
+      const formData = new FormData();
+      formData.append('prompt', prompt);
       
-      // Create a mock job
-      const jobId = generateJobId();
-      const job: GenerationJob = {
-        jobId,
+      // Add reference images if provided
+      if (referenceImages && referenceImages.length > 0) {
+        referenceImages.forEach((image, index) => {
+          formData.append('images', image);
+        });
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/ai/generate`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${await response.text()}`);
+      }
+      
+      const data = await response.json();
+      return {
+        jobId: data.jobId,
         status: 'processing',
         createdAt: new Date().toISOString(),
-        prompt
+        prompt: prompt
       };
-      
-      mockJobs[jobId] = job;
-      
-      // Simulate job completion after delay
-      setTimeout(() => {
-        mockJobs[jobId].status = 'completed';
-        mockJobs[jobId].variations = generateVariations();
-        
-        // Create a mock result that will be available when status is checked
-        mockResults[jobId] = {
-          jobId,
-          previewImageUrl: mockJobs[jobId].variations![0],
-          highResImageUrl: mockJobs[jobId].variations![0], // Same image for now but would be higher res
-          prompt,
-          createdAt: job.createdAt,
-          tags: prompt.split(' ').filter(word => word.length > 3).slice(0, 5),
-          isPublic: true,
-          resolution: '256x256'
-        };
-      }, 5000);
-      
-      return job;
     } catch (error) {
       console.error("Error generating texture:", error);
       throw new Error("Failed to generate texture");
@@ -87,44 +63,29 @@ export const textureApi = {
   // Modify an existing texture based on a selected variation
   modifyTexture: async (jobId: string, prompt: string): Promise<GenerationJob> => {
     try {
-      await mockDelay(1500); // Simulate API delay
+      const response = await fetch(`${API_BASE_URL}/ai/modify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          jobId,
+          prompt
+        }),
+        credentials: 'include',
+      });
       
-      // Create a modified job
-      const newJobId = generateJobId();
-      const originalJob = mockJobs[jobId];
-      
-      if (!originalJob) {
-        throw new Error("Original texture not found");
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${await response.text()}`);
       }
       
-      const job: GenerationJob = {
-        jobId: newJobId,
+      const data = await response.json();
+      return {
+        jobId: data.jobId,
         status: 'processing',
         createdAt: new Date().toISOString(),
-        prompt: `${originalJob.prompt} ${prompt}`.trim()
+        prompt: prompt
       };
-      
-      mockJobs[newJobId] = job;
-      
-      // Simulate job completion after delay
-      setTimeout(() => {
-        mockJobs[newJobId].status = 'completed';
-        mockJobs[newJobId].variations = generateVariations();
-        
-        // Create a mock result
-        mockResults[newJobId] = {
-          jobId: newJobId,
-          previewImageUrl: mockJobs[newJobId].variations![0],
-          highResImageUrl: mockJobs[newJobId].variations![0], // Same image for now
-          prompt: job.prompt,
-          createdAt: job.createdAt,
-          tags: job.prompt.split(' ').filter(word => word.length > 3).slice(0, 5),
-          isPublic: true,
-          resolution: '256x256'
-        };
-      }, 4000);
-      
-      return job;
     } catch (error) {
       console.error("Error modifying texture:", error);
       throw new Error("Failed to modify texture");
@@ -134,43 +95,28 @@ export const textureApi = {
   // Finalize and upscale a texture
   finalizeTexture: async (jobId: string): Promise<GenerationJob> => {
     try {
-      await mockDelay(1000); // Simulate API delay
+      const response = await fetch(`${API_BASE_URL}/ai/upscale`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          jobId
+        }),
+        credentials: 'include',
+      });
       
-      // Create an upscaled job
-      const newJobId = generateJobId();
-      const originalJob = mockJobs[jobId];
-      
-      if (!originalJob) {
-        throw new Error("Original texture not found");
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${await response.text()}`);
       }
       
-      const job: GenerationJob = {
-        jobId: newJobId,
+      const data = await response.json();
+      return {
+        jobId: data.jobId,
         status: 'processing',
         createdAt: new Date().toISOString(),
-        prompt: originalJob.prompt
+        prompt: "Upscaling texture"
       };
-      
-      mockJobs[newJobId] = job;
-      
-      // Simulate job completion after delay (longer for upscale)
-      setTimeout(() => {
-        mockJobs[newJobId].status = 'completed';
-        
-        // Create a mock result with higher resolution
-        mockResults[newJobId] = {
-          jobId: newJobId,
-          previewImageUrl: originalJob.variations ? originalJob.variations[0] : '',
-          highResImageUrl: originalJob.variations ? originalJob.variations[0] : '', // In reality, this would be higher res
-          prompt: job.prompt,
-          createdAt: job.createdAt,
-          tags: job.prompt.split(' ').filter(word => word.length > 3).slice(0, 5),
-          isPublic: true,
-          resolution: '1024x1024'
-        };
-      }, 8000);
-      
-      return job;
     } catch (error) {
       console.error("Error finalizing texture:", error);
       throw new Error("Failed to finalize texture");
@@ -180,15 +126,23 @@ export const textureApi = {
   // Check the status of a job
   checkJobStatus: async (jobId: string): Promise<GenerationJob> => {
     try {
-      await mockDelay(500); // Simulate API delay
+      const response = await fetch(`${API_BASE_URL}/ai/status/${jobId}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
       
-      const job = mockJobs[jobId];
-      
-      if (!job) {
-        throw new Error("Job not found");
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${await response.text()}`);
       }
       
-      return job;
+      const data = await response.json();
+      return {
+        jobId: data.jobId,
+        status: data.status,
+        createdAt: data.createdAt,
+        prompt: data.prompt,
+        variations: data.variations
+      };
     } catch (error) {
       console.error("Error checking job status:", error);
       throw new Error("Failed to check job status");
@@ -198,15 +152,16 @@ export const textureApi = {
   // Get job results
   getJobResults: async (jobId: string): Promise<JobResult> => {
     try {
-      await mockDelay(800); // Simulate API delay
+      const response = await fetch(`${API_BASE_URL}/ai/job-results/${jobId}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
       
-      const result = mockResults[jobId];
-      
-      if (!result) {
-        throw new Error("Job results not found");
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${await response.text()}`);
       }
       
-      return result;
+      return await response.json();
     } catch (error) {
       console.error("Error getting job results:", error);
       throw new Error("Failed to get job results");
@@ -216,27 +171,81 @@ export const textureApi = {
   // Download a high-resolution texture
   downloadTexture: async (jobId: string): Promise<string> => {
     try {
-      // Check if user is authenticated (this would be handled by the actual API)
-      const isAuthenticated = true; // In a real app, this would be determined by auth state
+      const response = await fetch(`${API_BASE_URL}/ai/download/${jobId}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
       
-      if (!isAuthenticated) {
-        throw new Error("Authentication required to download textures");
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${await response.text()}`);
       }
       
-      await mockDelay(1200); // Simulate API delay
-      
-      const result = mockResults[jobId];
-      
-      if (!result) {
-        throw new Error("Texture not found");
-      }
-      
-      // In a real implementation, this would return a download URL or blob
-      return result.highResImageUrl;
+      // In a real implementation, handle the blob download
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
     } catch (error) {
       console.error("Error downloading texture:", error);
       throw new Error("Failed to download texture");
     }
+  },
+
+  // Get user's textures
+  getUserTextures: async (): Promise<JobResult[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/ai/user-textures`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${await response.text()}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error("Error getting user textures:", error);
+      throw new Error("Failed to get user textures");
+    }
+  },
+  
+  // Get public textures
+  getPublicTextures: async (page: number = 1, limit: number = 20): Promise<JobResult[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/ai/public-textures?page=${page}&limit=${limit}`, {
+        method: 'GET',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${await response.text()}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error("Error getting public textures:", error);
+      throw new Error("Failed to get public textures");
+    }
+  },
+  
+  // Update texture visibility
+  updateTextureVisibility: async (jobId: string, isPublic: boolean): Promise<void> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/ai/update-visibility/${jobId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          isPublic
+        }),
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${await response.text()}`);
+      }
+    } catch (error) {
+      console.error("Error updating texture visibility:", error);
+      throw new Error("Failed to update texture visibility");
+    }
   }
 };
-

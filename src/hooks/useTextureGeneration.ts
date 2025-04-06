@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { textureApi, GenerationJob, JobResult } from '@/api/textureApi';
 
@@ -25,19 +25,28 @@ export const useTextureGeneration = () => {
   const [isPollingStatus, setIsPollingStatus] = useState(false);
   const [jobResult, setJobResult] = useState<JobResult | null>(null);
   const [selectedVariationIndex, setSelectedVariationIndex] = useState<number>(-1);
+  
+  // Reference to store the polling interval
+  const pollingIntervalRef = useRef<number | undefined>();
 
   // Poll job status
   useEffect(() => {
-    let intervalId: number | undefined;
+    // Clear any existing polling interval
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = undefined;
+    }
     
     if (currentJobId && isPollingStatus) {
-      intervalId = window.setInterval(async () => {
+      // Set up polling to check status every 10 seconds
+      pollingIntervalRef.current = window.setInterval(async () => {
         try {
           const jobStatus = await textureApi.checkJobStatus(currentJobId);
           
           if (jobStatus.status === 'completed') {
             setIsPollingStatus(false);
-            clearInterval(intervalId);
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = undefined;
             
             // Get job results
             const results = await textureApi.getJobResults(currentJobId);
@@ -66,7 +75,8 @@ export const useTextureGeneration = () => {
           } else if (jobStatus.status === 'failed') {
             setIsPollingStatus(false);
             setIsGenerating(false);
-            clearInterval(intervalId);
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = undefined;
             toast.error("Generation failed", {
               description: "Please try again with a different prompt."
             });
@@ -76,14 +86,18 @@ export const useTextureGeneration = () => {
           console.error("Error polling job status:", error);
           setIsPollingStatus(false);
           setIsGenerating(false);
-          clearInterval(intervalId);
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = undefined;
           toast.error("Error checking generation status");
         }
-      }, 3000);
+      }, 10000); // Poll every 10 seconds as requested
     }
     
     return () => {
-      if (intervalId) clearInterval(intervalId);
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = undefined;
+      }
     };
   }, [currentJobId, isPollingStatus]);
 

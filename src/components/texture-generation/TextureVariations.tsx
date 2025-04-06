@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { TextureVariation } from '@/hooks/useTextureGeneration';
+import { Check } from 'lucide-react';
 
 interface TextureVariationsProps {
   variations: TextureVariation[];
@@ -36,6 +37,11 @@ const TextureVariations: React.FC<TextureVariationsProps> = ({
               alt={`Variation ${index + 1}`}
               className="h-full w-full object-cover"
             />
+            {index === selectedIndex && (
+              <div className="absolute top-1 right-1 bg-primary rounded-full p-0.5">
+                <Check className="h-3 w-3 text-white" />
+              </div>
+            )}
           </div>
         ))}
       </div>
