@@ -1,11 +1,44 @@
+import { config } from "@/config/env";
+import { fetchWithAuth } from "@/utils/fetchWithAuth";
+import { tokenManager } from "@/utils/tokenManager";
 
-// API base URL - this will be replaced with the production URL later
-const API_BASE_URL = "http://localhost:8000";
+export interface ApiError {
+  status: number;
+  message: string;
+  data?: any;
+}
+
+const handleApiError = async (response: Response): Promise<never> => {
+  let errorMessage = `Error ${response.status}`;
+  let errorData;
+
+  try {
+    errorData = await response.json();
+    errorMessage = errorData.message || errorMessage;
+  } catch {
+    // If response is not JSON, try to get text
+    try {
+      const text = await response.text();
+      errorMessage = text || errorMessage;
+    } catch {
+      // If we can't get text either, use default message
+    }
+  }
+
+  const error: ApiError = {
+    status: response.status,
+    message: errorMessage,
+    data: errorData,
+  };
+
+  console.error(`API Error: ${errorMessage}`, error);
+  throw error;
+};
 
 // Types based on the API documentation
 export interface GenerationJob {
   jobId: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: "pending" | "processing" | "completed" | "failed";
   createdAt: string;
   prompt: string;
   variations?: string[];
@@ -25,227 +58,216 @@ export interface JobResult {
 
 export const textureApi = {
   // Generate initial texture variations
-  generateTexture: async (prompt: string, referenceImages?: File[]): Promise<GenerationJob> => {
+  generateTexture: async (
+    prompt: string,
+    referenceImages?: File[]
+  ): Promise<GenerationJob> => {
     try {
-      const formData = new FormData();
-      formData.append('prompt', prompt);
-      
-      // Add reference images if provided
-      if (referenceImages && referenceImages.length > 0) {
-        referenceImages.forEach((image, index) => {
-          formData.append('images', image);
-        });
-      }
-      
-      const response = await fetch(`${API_BASE_URL}/ai/generate`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${await response.text()}`);
-      }
-      
-      const data = await response.json();
-      return {
-        jobId: data.jobId,
-        status: 'processing',
-        createdAt: new Date().toISOString(),
-        prompt: prompt
-      };
-    } catch (error) {
-      console.error("Error generating texture:", error);
-      throw new Error("Failed to generate texture");
-    }
-  },
-  
-  // Modify an existing texture based on a selected variation
-  modifyTexture: async (jobId: string, prompt: string): Promise<GenerationJob> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/ai/modify`, {
-        method: 'POST',
+      const response = await fetchWithAuth(`${config.apiBaseUrl}/ai/generate`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
         },
         body: JSON.stringify({
-          jobId,
-          prompt
+          prompt,
+          imagePaths: referenceImages?.map((file) => file.name),
+          size: "1024x1024",
         }),
-        credentials: 'include',
       });
-      
+
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${await response.text()}`);
+        return handleApiError(response);
       }
-      
+
       const data = await response.json();
-      return {
-        jobId: data.jobId,
-        status: 'processing',
-        createdAt: new Date().toISOString(),
-        prompt: prompt
-      };
+      console.log("Generate texture response:", data);
+      return data;
     } catch (error) {
-      console.error("Error modifying texture:", error);
-      throw new Error("Failed to modify texture");
+      console.error("Error in generateTexture:", error);
+      throw error;
     }
   },
-  
+
+  // Modify an existing texture based on a selected variation
+  modifyTexture: async (
+    jobId: string,
+    prompt: string
+  ): Promise<GenerationJob> => {
+    try {
+      const response = await fetchWithAuth(`${config.apiBaseUrl}/ai/modify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
+        },
+        body: JSON.stringify({ jobId, prompt }),
+      });
+
+      if (!response.ok) {
+        return handleApiError(response);
+      }
+
+      const data = await response.json();
+      console.log("Modify texture response:", data);
+      return data;
+    } catch (error) {
+      console.error("Error in modifyTexture:", error);
+      throw error;
+    }
+  },
+
   // Finalize and upscale a texture
   finalizeTexture: async (jobId: string): Promise<GenerationJob> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/upscale`, {
-        method: 'POST',
+      const response = await fetchWithAuth(`${config.apiBaseUrl}/ai/upscale`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
         },
-        body: JSON.stringify({
-          jobId
-        }),
-        credentials: 'include',
+        body: JSON.stringify({ jobId }),
       });
-      
+
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${await response.text()}`);
+        return handleApiError(response);
       }
-      
+
       const data = await response.json();
-      return {
-        jobId: data.jobId,
-        status: 'processing',
-        createdAt: new Date().toISOString(),
-        prompt: "Upscaling texture"
-      };
+      console.log("Finalize texture response:", data);
+      return data;
     } catch (error) {
-      console.error("Error finalizing texture:", error);
-      throw new Error("Failed to finalize texture");
+      console.error("Error in finalizeTexture:", error);
+      throw error;
     }
   },
-  
+
   // Check the status of a job
   checkJobStatus: async (jobId: string): Promise<GenerationJob> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/status/${jobId}`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-      
+      const response = await fetchWithAuth(
+        `${config.apiBaseUrl}/ai/status/${jobId}`
+      );
+
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${await response.text()}`);
+        return handleApiError(response);
       }
-      
+
       const data = await response.json();
-      return {
-        jobId: data.jobId,
-        status: data.status,
-        createdAt: data.createdAt,
-        prompt: data.prompt,
-        variations: data.variations
-      };
+      console.log("Check job status response:", data);
+      return data;
     } catch (error) {
-      console.error("Error checking job status:", error);
-      throw new Error("Failed to check job status");
+      console.error("Error in checkJobStatus:", error);
+      throw error;
     }
   },
-  
+
   // Get job results
   getJobResults: async (jobId: string): Promise<JobResult> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/job-results/${jobId}`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-      
+      const response = await fetchWithAuth(
+        `${config.apiBaseUrl}/ai/job-results/${jobId}`
+      );
+
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${await response.text()}`);
+        return handleApiError(response);
       }
-      
-      return await response.json();
+
+      const data = await response.json();
+      console.log("Get job results response:", data);
+      return data;
     } catch (error) {
-      console.error("Error getting job results:", error);
-      throw new Error("Failed to get job results");
+      console.error("Error in getJobResults:", error);
+      throw error;
     }
   },
-  
+
+  // TODO: There is no downloadTexture endpoint in the API
   // Download a high-resolution texture
   downloadTexture: async (jobId: string): Promise<string> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/download/${jobId}`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-      
+      const response = await fetchWithAuth(
+        `${config.apiBaseUrl}/textures/${jobId}/download`
+      );
+
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${await response.text()}`);
+        return handleApiError(response);
       }
-      
-      // In a real implementation, handle the blob download
+
       const blob = await response.blob();
       return URL.createObjectURL(blob);
     } catch (error) {
-      console.error("Error downloading texture:", error);
-      throw new Error("Failed to download texture");
+      console.error("Error in downloadTexture:", error);
+      throw error;
     }
   },
 
   // Get user's textures
   getUserTextures: async (): Promise<JobResult[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/user-textures`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-      
+      const response = await fetchWithAuth(
+        `${config.apiBaseUrl}/textures/user`
+      );
+
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${await response.text()}`);
+        return handleApiError(response);
       }
-      
-      return await response.json();
+
+      const data = await response.json();
+      console.log("Get user textures response:", data);
+      return data;
     } catch (error) {
-      console.error("Error getting user textures:", error);
-      throw new Error("Failed to get user textures");
+      console.error("Error in getUserTextures:", error);
+      throw error;
     }
   },
-  
+
   // Get public textures
-  getPublicTextures: async (page: number = 1, limit: number = 20): Promise<JobResult[]> => {
+  getPublicTextures: async (
+    page: number = 1,
+    limit: number = 20
+  ): Promise<JobResult[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/public-textures?page=${page}&limit=${limit}`, {
-        method: 'GET',
-      });
-      
+      const response = await fetchWithAuth(
+        `${config.apiBaseUrl}/textures/public?page=${page}&limit=${limit}`
+      );
+
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${await response.text()}`);
+        return handleApiError(response);
       }
-      
-      return await response.json();
+
+      const data = await response.json();
+      console.log("Get public textures response:", data);
+      return data;
     } catch (error) {
-      console.error("Error getting public textures:", error);
-      throw new Error("Failed to get public textures");
+      console.error("Error in getPublicTextures:", error);
+      throw error;
     }
   },
-  
+
   // Update texture visibility
-  updateTextureVisibility: async (jobId: string, isPublic: boolean): Promise<void> => {
+  updateTextureVisibility: async (
+    jobId: string,
+    isPublic: boolean
+  ): Promise<void> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/update-visibility/${jobId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          isPublic
-        }),
-        credentials: 'include',
-      });
-      
+      const response = await fetchWithAuth(
+        `${config.apiBaseUrl}/textures/${jobId}/visibility`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ isPublic }),
+        }
+      );
+
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${await response.text()}`);
+        return handleApiError(response);
       }
     } catch (error) {
-      console.error("Error updating texture visibility:", error);
-      throw new Error("Failed to update texture visibility");
+      console.error("Error in updateTextureVisibility:", error);
+      throw error;
     }
-  }
+  },
 };

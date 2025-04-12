@@ -60,12 +60,12 @@ const GenerationForm = () => {
   const [showResolutionDialog, setShowResolutionDialog] = useState(false);
 
   const handleGenerateClick = () => {
+    console.log("Is Authenticated", isAuthenticated);
     // Check if user is authenticated
     if (!isAuthenticated) {
       setShowLoginPrompt(true);
       return;
     }
-    
     handleGenerate(referenceImages);
   };
 
